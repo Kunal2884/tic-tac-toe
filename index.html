@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-T6QgcXbX+CDU1jNsaNtxikT5jzW+DMe8z0UZlDvI7Tp3Ozk1uqOfZnl5S+g94xYU5tj+ZCNAN2XDiS6yjXY0QA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-image: url('https://images.pexels.com/photos/1535421/pexels-photo-1535421.jpeg?auto=compress&cs=tinysrgb&w=600');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border: 1px solid #c90404;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-family: 'Arial', sans-serif;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .player-X {
+            color: #010005;
+        }
+
+        .player-O {
+            color: #e2210c;
+        }
+
+        .winning-cell {
+            background-color: green;
+        }
+
+        .winning-line {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid red;
+            box-sizing: border-box;
+            z-index: 1;
+        }
+
+        #developer {
+            position: fixed;
+            bottom: 40px;
+            right: 158px;
+            color: #100101;
+            font-size: 24px;
+            transform-origin: bottom right;
+            transition: transform 0.8s;
+        }
+
+        #developer:hover {
+            transform: rotate(360deg);
+        }
+
+        #instagram {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            color: #090000;
+        }
+
+        #instagram a {
+            color: #210699;
+        }
+
+        #result {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        #restart-btn,
+        #new-game-btn {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            background-color: #06b10b;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        #score {
+            font-size: 20px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #280ebb;
+            padding: 10px;
+            color: #fff;
+        }
+
+        .celebration {
+            animation: celebrate 0.5s ease-in-out;
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+    <title>Tic Tac Toe</title>
+</head>
+<body>
+
+<div id="board"></div>
+<div id="result"></div>
+<button id="restart-btn" onclick="restartGame()">Restart Game</button>
+<button id="new-game-btn" onclick="newGame()">New Game</button>
+<div id="score">X Wins: <span id="xWins">0</span> | O Wins: <span id="oWins">0</span></div>
+<div id="developer">Developer: Kunal Pattarwal</div>
+<div id="instagram">
+    <a href="https://www.instagram.com/kunal_ch0udhary_?igsh=ZTM4ZDRiNzUwMw==" target="_blank">
+        <i class="fab fa-instagram"></i> Instagram
+    </a>
+</div>
+
+<script>
+    const board = document.getElementById('board');
+    const restartBtn = document.getElementById('restart-btn');
+    const newGameBtn = document.getElementById('new-game-btn');
+    const resultDisplay = document.getElementById('result');
+    const xWinsDisplay = document.getElementById('xWins');
+    const oWinsDisplay = document.getElementById('oWins');
+    const developerName = document.getElementById('developer');
+
+    let currentPlayer = 'X';
+    let gameBoard = ['', '', '', '', '', '', '', '', ''];
+    let gameActive = true;
+    let xWins = 0;
+    let oWins = 0;
+
+    const checkWinner = () => {
+        const winPatterns = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        for (let pattern of winPatterns) {
+            const [a, b, c] = pattern;
+            if (gameBoard[a] && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c]) {
+                highlightWinningCells(pattern);
+                return gameBoard[a];
+            }
+        }
+
+        return null;
+    };
+
+    const highlightWinningCells = (pattern) => {
+        pattern.forEach(index => {
+            const cell = document.getElementById(`cell${index}`);
+            cell.classList.add('winning-cell');
+
+            // Add a winning line
+            const line = document.createElement('div');
+            line.className = 'winning-line';
+            cell.appendChild(line);
+        });
+    };
+
+    const restartGame = () => {
+        gameBoard = ['', '', '', '', '', '', '', '', ''];
+        gameActive = true;
+        resultDisplay.innerText = '';
+        board.innerHTML = '';
+        renderBoard();
+        restartBtnNotification();
+    };
+
+    const newGame = () => {
+        xWins = 0;
+        oWins = 0;
+        xWinsDisplay.innerText = 0;
+        oWinsDisplay.innerText = 0;
+        restartGame();
+    };
+
+    const restartBtnNotification = () => {
+        alert('Game restarted!');
+    };
+
+    const renderBoard = () => {
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.id = `cell${i}`;
+            cell.addEventListener('click', () => handleCellClick(i));
+            board.appendChild(cell);
+        }
+    };
+
+    const handleCellClick = (index) => {
+        if (!gameActive || gameBoard[index] !== '') return;
+
+        gameBoard[index] = currentPlayer;
+        document.getElementById(`cell${index}`).innerText = currentPlayer;
+        document.getElementById(`cell${index}`).classList.add(`player-${currentPlayer}`);
+
+        const winner = checkWinner();
+        if (winner) {
+            gameActive = false;
+            resultDisplay.innerText = `Player ${winner} wins!`;
+            updateScore(winner);
+        } else if (gameBoard.every(cell => cell !== '')) {
+            gameActive = false;
+            resultDisplay.innerText = 'It\'s a tie!';
+        } else {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        }
+    };
+
+    const updateScore = (winner) => {
+        if (winner === 'X') {
+            xWins++;
+            xWinsDisplay.innerText = xWins;
+        } else {
+            oWins++;
+            oWinsDisplay.innerText = oWins;
+        }
+    };
+
+    renderBoard();
+</script>
+
+</body>
+</html>
